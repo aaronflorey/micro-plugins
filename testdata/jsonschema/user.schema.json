@@ -1,0 +1,11 @@
+{
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "age": {
+      "type": "integer",
+      "minimum": 18
+    }
+  }
+}
