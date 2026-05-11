@@ -1,0 +1,174 @@
+#!/usr/bin/env bun
+
+import { execFileSync } from "node:child_process";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, relative } from "node:path";
+
+const repoRoot = join(import.meta.dir, "..");
+const repoJsonPath = join(repoRoot, "repo.json");
+const pluginsDir = join(repoRoot, "plugins");
+
+type BumpLevel = "major" | "minor" | "patch";
+
+function runGit(args: string[]): string {
+  return execFileSync("git", args, { cwd: repoRoot, encoding: "utf-8" }).trim();
+}
+
+function parseBumpLevel(message: string): BumpLevel | null {
+  const lines = message.split(/\r?\n/);
+  if (lines.length === 0) {
+    return null;
+  }
+
+  const header = lines[0].trim();
+  const match = header.match(/^(?<type>[a-z]+)(\([^)]+\))?(?<breaking>!)?:\s+.+$/);
+  if (!match || !match.groups) {
+    return null;
+  }
+
+  const isBreaking = Boolean(match.groups.breaking) || message.includes("BREAKING CHANGE:");
+  if (isBreaking) {
+    return "major";
+  }
+
+  if (match.groups.type === "feat") {
+    return "minor";
+  }
+
+  return "patch";
+}
+
+function bumpVersion(version: string, level: BumpLevel): string {
+  const [major, minor, patch] = version.split(".").map((value) => Number.parseInt(value, 10));
+  if (level === "major") {
+    return `${major + 1}.0.0`;
+  }
+  if (level === "minor") {
+    return `${major}.${minor + 1}.0`;
+  }
+  return `${major}.${minor}.${patch + 1}`;
+}
+
+function changedPluginsFromIndex(): Set<string> {
+  const changed = runGit(["diff", "--cached", "--name-only"]);
+  const plugins = new Set<string>();
+
+  for (const path of changed.split(/\r?\n/)) {
+    const parts = path.split("/");
+    if (parts.length >= 2 && parts[0] === "plugins") {
+      plugins.add(parts[1]);
+    }
+  }
+
+  return plugins;
+}
+
+function updatePluginLuaVersion(plugin: string, newVersion: string): string | null {
+  const pluginDir = join(pluginsDir, plugin);
+  const entries = readdirSync(pluginDir, { withFileTypes: true });
+  const luaFiles = entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".lua"))
+    .map((entry) => join(pluginDir, entry.name))
+    .sort();
+
+  for (const luaFile of luaFiles) {
+    const content = readFileSync(luaFile, "utf-8");
+    const updated = content.replace(
+      /^VERSION\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"/m,
+      `VERSION = "${newVersion}"`,
+    );
+    if (updated !== content) {
+      writeFileSync(luaFile, updated, "utf-8");
+      return luaFile;
+    }
+  }
+
+  return null;
+}
+
+function updateRepoJsonVersions(plugins: Set<string>, level: BumpLevel): Map<string, string> {
+  const data = JSON.parse(readFileSync(repoJsonPath, "utf-8")) as Array<Record<string, unknown>>;
+  const bumped = new Map<string, string>();
+
+  for (const entry of data) {
+    const name = entry.Name;
+    if (typeof name !== "string" || !plugins.has(name)) {
+      continue;
+    }
+
+    const versions = entry.Versions;
+    if (!Array.isArray(versions) || versions.length === 0) {
+      continue;
+    }
+
+    const first = versions[0] as Record<string, unknown>;
+    const current = first.Version;
+    if (typeof current !== "string") {
+      continue;
+    }
+
+    const newVersion = bumpVersion(current, level);
+    first.Version = newVersion;
+    bumped.set(name, newVersion);
+  }
+
+  if (bumped.size > 0) {
+    writeFileSync(repoJsonPath, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
+  }
+
+  return bumped;
+}
+
+function stageFiles(files: string[]): void {
+  if (files.length === 0) {
+    return;
+  }
+
+  const relFiles = files.map((file) => relative(repoRoot, file));
+  execFileSync("git", ["add", ...relFiles], { cwd: repoRoot, stdio: "inherit" });
+}
+
+function main(): number {
+  const msgPath = process.argv[2];
+  if (!msgPath) {
+    console.error("Usage: bump_plugin_versions.ts <commit_msg_file>");
+    return 1;
+  }
+
+  const message = readFileSync(msgPath, "utf-8");
+  const level = parseBumpLevel(message);
+  if (!level) {
+    console.log("lefthook: skipping plugin version bump (non-conventional commit)");
+    return 0;
+  }
+
+  const changedPlugins = changedPluginsFromIndex();
+  if (changedPlugins.size === 0) {
+    return 0;
+  }
+
+  const bumped = updateRepoJsonVersions(changedPlugins, level);
+  if (bumped.size === 0) {
+    return 0;
+  }
+
+  const touched = [repoJsonPath];
+  for (const [plugin, newVersion] of bumped.entries()) {
+    const luaFile = updatePluginLuaVersion(plugin, newVersion);
+    if (!luaFile) {
+      console.log(`lefthook: warning: no VERSION entry found for plugin '${plugin}'`);
+      continue;
+    }
+    touched.push(luaFile);
+  }
+
+  stageFiles(touched);
+  const details = Array.from(bumped.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, version]) => `${name} -> ${version}`)
+    .join(", ");
+  console.log(`lefthook: bumped plugin versions (${level}): ${details}`);
+  return 0;
+}
+
+process.exit(main());

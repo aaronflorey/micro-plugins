@@ -1,0 +1,4 @@
+[tools]
+jsonschema = "latest"
+lefthook = "latest"
+bun = "latest"

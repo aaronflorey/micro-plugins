@@ -1,0 +1,4 @@
+commit-msg:
+  commands:
+    bump-plugin-versions:
+      run: bun scripts/bump_plugin_versions.ts {1}
