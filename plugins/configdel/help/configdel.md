@@ -20,7 +20,7 @@ Place your cursor on or near the key you want to delete, then run:
 > del-key
 ```
 
-Or use the default keybinding:
+Or use the default keybinding (plugin now force-binds this on init):
 
 ```text
 Alt-d

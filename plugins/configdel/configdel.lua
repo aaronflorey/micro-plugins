@@ -6,7 +6,6 @@ local shell = import("micro/shell")
 local filepath = import("path/filepath")
 local strings = import("strings")
 local os = import("os")
-local json = import("encoding/json")
 
 local supported_extensions = {
     [".yml"] = "yaml",
@@ -44,17 +43,36 @@ local function get_file_type(path)
     return supported_extensions[ext]
 end
 
-local function parse_json_array(json_str)
-    local success, result = pcall(json.Unmarshal, json_str)
-    if not success then
-        return nil
+local function split_string(value, separator)
+    local parts = {}
+    if value == nil or value == "" then
+        return parts
     end
-    return result
+
+    local pattern = string.format("([^%s]+)", separator)
+    for part in string.gmatch(value, pattern) do
+        table.insert(parts, part)
+    end
+    return parts
+end
+
+local function parse_path(raw)
+    local path = {}
+    for _, part in ipairs(split_string(raw, string.char(31))) do
+        local number = tonumber(part)
+        if number ~= nil and tostring(number) == part then
+            table.insert(path, number)
+        else
+            table.insert(path, part)
+        end
+    end
+    return path
 end
 
 local function yq_key_candidates(yq_exe, file_path)
-    local query = '.. | select(tag == "!!map") | .[] | {"path": path, "key": key, "key_line": (key | line), "key_col": (key | column)}'
-    local output, err = shell.ExecCommand(yq_exe, "eval", "-o=json", "-I=0", query, file_path)
+    local separator = string.char(31)
+    local query = '.. | select(tag == "!!map") | .[] | ((path | map(tostring) | join("' .. separator .. '")) + "\t" + (key | tostring) + "\t" + ((key | line) | tostring) + "\t" + ((key | column) | tostring))'
+    local output, err = shell.ExecCommand(yq_exe, "eval", "-r", query, file_path)
     if err ~= nil then
         return nil, tostring(err)
     end
@@ -63,9 +81,14 @@ local function yq_key_candidates(yq_exe, file_path)
     for line in output:gmatch("[^\n]+") do
         line = strings.TrimSpace(line)
         if line ~= "" then
-            local candidate = parse_json_array(line)
-            if candidate ~= nil then
-                table.insert(candidates, candidate)
+            local fields = split_string(line, "\t")
+            if #fields >= 4 then
+                table.insert(candidates, {
+                    path = parse_path(fields[1]),
+                    key = fields[2],
+                    key_line = tonumber(fields[3]) or 0,
+                    key_col = tonumber(fields[4]) or 0,
+                })
             end
         end
     end
@@ -104,28 +127,52 @@ local function find_key_at_cursor(candidates, cursor_line, cursor_col, file_type
 
     if not has_line_data then
         local buf = bp.Buf
-        local start_line = math.max(1, cursor_line - 5)
-        local end_line = math.min(cursor_line + 5, buf:End().Y + 1)
-        local line_keys = {}
-        for ln = start_line, end_line do
-            local loc = {X = 0, Y = ln - 1}
-            local line_text = ""
-            local line_obj = buf:Line(ln - 1)
-            if line_obj ~= nil then
-                line_text = line_obj
+        local max_line = buf:End().Y + 1
+        local max_radius = math.max(cursor_line - 1, max_line - cursor_line)
+
+        local function key_on_line(line_number)
+            if line_number < 1 or line_number > max_line then
+                return nil
             end
-            local key = extract_key_from_line(line_text)
-            if key then
-                line_keys[key] = ln
+            local line_obj = buf:Line(line_number - 1)
+            if line_obj == nil then
+                return nil
+            end
+            return extract_key_from_line(line_obj)
+        end
+
+        local target_key = key_on_line(cursor_line)
+        if target_key == nil then
+            for radius = 1, max_radius do
+                local before = key_on_line(cursor_line - radius)
+                if before ~= nil then
+                    target_key = before
+                    break
+                end
+
+                local after = key_on_line(cursor_line + radius)
+                if after ~= nil then
+                    target_key = after
+                    break
+                end
             end
         end
-        for _, c in ipairs(candidates) do
-            if line_keys[c.key] ~= nil then
-                return c
+
+        if target_key ~= nil then
+            local matches = {}
+            for _, c in ipairs(candidates) do
+                if c.key == target_key then
+                    table.insert(matches, c)
+                end
+            end
+
+            if #matches > 0 then
+                return matches[#matches]
             end
         end
+
         if #candidates > 0 then
-            return candidates[1]
+            return candidates[#candidates]
         end
         return nil
     end
@@ -173,14 +220,21 @@ local function path_to_yq_del_path(path_arr)
     end
 
     local parts = {}
+
+    local function escape_double_quoted(value)
+        value = string.gsub(value, "\\", "\\\\")
+        value = string.gsub(value, '"', '\\"')
+        return value
+    end
+
     for _, p in ipairs(path_arr) do
         if type(p) == "number" then
             table.insert(parts, "[" .. tostring(p) .. "]")
         else
-            if #parts == 0 then
+            if string.match(p, "^[A-Za-z_][A-Za-z0-9_]*$") then
                 table.insert(parts, "." .. p)
             else
-                table.insert(parts, "." .. p)
+                table.insert(parts, '["' .. escape_double_quoted(p) .. '"]')
             end
         end
     end
@@ -265,6 +319,13 @@ end
 
 function init()
     config.MakeCommand("del-key", delete_key_command, config.NoComplete)
-    config.BindKey("Alt-d", "command:del-key")
+    local bound = false
+    if config.BindKey ~= nil then
+        local ok = pcall(config.BindKey, "Alt-d", "command:del-key", false)
+        bound = ok
+    end
+    if not bound then
+        config.TryBindKey("Alt-d", "command:del-key", false)
+    end
     config.AddRuntimeFile("configdel", config.RTHelp, "help/configdel.md")
 end
