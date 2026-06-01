@@ -50,16 +50,29 @@ function bumpVersion(version: string, level: BumpLevel): string {
 
 function changedPluginsFromIndex(): Set<string> {
   const changed = runGit(["diff", "--cached", "--name-only"]);
-  const plugins = new Set<string>();
+  const pluginFiles = new Map<string, boolean>();
 
   for (const path of changed.split(/\r?\n/)) {
     const parts = path.split("/");
-    if (parts.length >= 2 && parts[0] === "plugins") {
-      plugins.add(parts[1]);
+    if (parts.length < 2 || parts[0] !== "plugins") continue;
+
+    const plugin = parts[1];
+    // Only version-related files get the version-only check
+    if (path.endsWith("repo.json") || path.endsWith(".lua")) {
+      if (!pluginFiles.has(plugin)) {
+        const diff = runGit(["diff", "--cached", "--", `plugins/${plugin}/`]);
+        const changeLines = diff.split(/\r?\n/).filter((l) => l.startsWith("+") || l.startsWith("-"));
+        const onlyVersion = changeLines.length > 0 && changeLines.every((l) =>
+          /^[+-]\s*("Version":\s*"[^"]*"|VERSION\s*=\s*"[^"]*")/.test(l)
+        );
+        pluginFiles.set(plugin, !onlyVersion);
+      }
+    } else {
+      pluginFiles.set(plugin, true);
     }
   }
 
-  return plugins;
+  return new Set(Array.from(pluginFiles.entries()).filter(([, v]) => v).map(([k]) => k));
 }
 
 function updatePluginLuaVersion(plugin: string, newVersion: string): string | null {
