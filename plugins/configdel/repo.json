@@ -1,0 +1,14 @@
+[{
+  "Name": "configdel",
+  "Description": "Delete the YAML or JSON key at the current cursor position",
+  "Website": "local",
+  "Tags": ["editing", "yaml", "json"],
+  "Versions": [
+    {
+      "Version": "0.1.0",
+      "Require": {
+        "micro": ">=2.0.0"
+      }
+    }
+  ]
+}]

@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
 
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const repoRoot = join(import.meta.dir, "..");
-const repoJsonPath = join(repoRoot, "repo.json");
 const pluginsDir = join(repoRoot, "plugins");
 
 type BumpLevel = "major" | "minor" | "patch";
@@ -86,34 +85,42 @@ function updatePluginLuaVersion(plugin: string, newVersion: string): string | nu
   return null;
 }
 
-function updateRepoJsonVersions(plugins: Set<string>, level: BumpLevel): Map<string, string> {
-  const data = JSON.parse(readFileSync(repoJsonPath, "utf-8")) as Array<Record<string, unknown>>;
-  const bumped = new Map<string, string>();
+function updatePluginRepoJson(plugin: string, newVersion: string): void {
+  const path = join(pluginsDir, plugin, "repo.json");
+  const data = JSON.parse(readFileSync(path, "utf-8")) as Array<Record<string, unknown>>;
 
-  for (const entry of data) {
-    const name = entry.Name;
-    if (typeof name !== "string" || !plugins.has(name)) {
-      continue;
+  if (data.length > 0) {
+    const versions = data[0].Versions;
+    if (Array.isArray(versions) && versions.length > 0) {
+      (versions[0] as Record<string, unknown>).Version = newVersion;
     }
-
-    const versions = entry.Versions;
-    if (!Array.isArray(versions) || versions.length === 0) {
-      continue;
-    }
-
-    const first = versions[0] as Record<string, unknown>;
-    const current = first.Version;
-    if (typeof current !== "string") {
-      continue;
-    }
-
-    const newVersion = bumpVersion(current, level);
-    first.Version = newVersion;
-    bumped.set(name, newVersion);
   }
 
-  if (bumped.size > 0) {
-    writeFileSync(repoJsonPath, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
+  writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
+}
+
+function updateRepoJsonVersions(plugins: Set<string>, level: BumpLevel): Map<string, string> {
+  const bumped = new Map<string, string>();
+
+  for (const plugin of plugins) {
+    const perPluginPath = join(pluginsDir, plugin, "repo.json");
+    if (!existsSync(perPluginPath)) continue;
+
+    const data = JSON.parse(readFileSync(perPluginPath, "utf-8")) as Array<Record<string, unknown>>;
+    if (data.length === 0) continue;
+
+    const versions = data[0].Versions;
+    if (!Array.isArray(versions) || versions.length === 0) continue;
+
+    const current = (versions[0] as Record<string, unknown>).Version;
+    if (typeof current !== "string") continue;
+
+    const newVersion = bumpVersion(current, level);
+    bumped.set(plugin, newVersion);
+  }
+
+  for (const [plugin, newVersion] of bumped) {
+    updatePluginRepoJson(plugin, newVersion);
   }
 
   return bumped;
@@ -152,8 +159,10 @@ function main(): number {
     return 0;
   }
 
-  const touched = [repoJsonPath];
+  const touched: string[] = [];
   for (const [plugin, newVersion] of bumped.entries()) {
+    touched.push(join(pluginsDir, plugin, "repo.json"));
+
     const luaFile = updatePluginLuaVersion(plugin, newVersion);
     if (!luaFile) {
       console.log(`lefthook: warning: no VERSION entry found for plugin '${plugin}'`);

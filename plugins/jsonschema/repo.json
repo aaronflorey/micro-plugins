@@ -1,0 +1,14 @@
+[{
+  "Name": "jsonschema",
+  "Description": "Validate saved JSON files against their root $schema using the jsonschema CLI",
+  "Website": "local",
+  "Tags": ["json", "schema", "validation"],
+  "Versions": [
+    {
+      "Version": "0.1.0",
+      "Require": {
+        "micro": ">=2.0.0"
+      }
+    }
+  ]
+}]
