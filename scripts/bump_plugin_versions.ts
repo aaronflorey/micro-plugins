@@ -2,7 +2,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 
 const repoRoot = join(import.meta.dir, "..");
 const pluginsDir = join(repoRoot, "plugins");
@@ -11,30 +11,6 @@ type BumpLevel = "major" | "minor" | "patch";
 
 function runGit(args: string[]): string {
   return execFileSync("git", args, { cwd: repoRoot, encoding: "utf-8" }).trim();
-}
-
-function parseBumpLevel(message: string): BumpLevel | null {
-  const lines = message.split(/\r?\n/);
-  if (lines.length === 0) {
-    return null;
-  }
-
-  const header = lines[0].trim();
-  const match = header.match(/^(?<type>[a-z]+)(\([^)]+\))?(?<breaking>!)?:\s+.+$/);
-  if (!match || !match.groups) {
-    return null;
-  }
-
-  const isBreaking = Boolean(match.groups.breaking) || message.includes("BREAKING CHANGE:");
-  if (isBreaking) {
-    return "major";
-  }
-
-  if (match.groups.type === "feat") {
-    return "minor";
-  }
-
-  return "patch";
 }
 
 function bumpVersion(version: string, level: BumpLevel): string {
@@ -139,57 +115,29 @@ function updateRepoJsonVersions(plugins: Set<string>, level: BumpLevel): Map<str
   return bumped;
 }
 
-function stageFiles(files: string[]): void {
-  if (files.length === 0) {
-    return;
-  }
-
-  const relFiles = files.map((file) => relative(repoRoot, file));
-  execFileSync("git", ["add", ...relFiles], { cwd: repoRoot, stdio: "inherit" });
-}
-
 function main(): number {
-  const msgPath = process.argv[2];
-  if (!msgPath) {
-    console.error("Usage: bump_plugin_versions.ts <commit_msg_file>");
-    return 1;
-  }
-
-  const message = readFileSync(msgPath, "utf-8");
-  const level = parseBumpLevel(message);
-  if (!level) {
-    console.log("lefthook: skipping plugin version bump (non-conventional commit)");
-    return 0;
-  }
-
   const changedPlugins = changedPluginsFromIndex();
   if (changedPlugins.size === 0) {
     return 0;
   }
 
-  const bumped = updateRepoJsonVersions(changedPlugins, level);
+  const bumped = updateRepoJsonVersions(changedPlugins, "patch");
   if (bumped.size === 0) {
     return 0;
   }
 
-  const touched: string[] = [];
   for (const [plugin, newVersion] of bumped.entries()) {
-    touched.push(join(pluginsDir, plugin, "repo.json"));
-
     const luaFile = updatePluginLuaVersion(plugin, newVersion);
     if (!luaFile) {
       console.log(`lefthook: warning: no VERSION entry found for plugin '${plugin}'`);
-      continue;
     }
-    touched.push(luaFile);
   }
 
-  stageFiles(touched);
   const details = Array.from(bumped.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([name, version]) => `${name} -> ${version}`)
     .join(", ");
-  console.log(`lefthook: bumped plugin versions (${level}): ${details}`);
+  console.log(`lefthook: bumped plugin versions (patch): ${details}`);
   return 0;
 }
 
