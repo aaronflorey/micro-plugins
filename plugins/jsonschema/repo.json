@@ -11,7 +11,7 @@
     "Versions": [
       {
         "Version": "0.2.1",
-        "Url": "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/jsonschema/jsonschema.lua",
+        "Url": "https://github.com/aaronflorey/micro-plugins/releases/download/jsonschema-v0.2.1/jsonschema-0.2.1.zip",
         "Require": {
           "micro": ">=2.0.0"
         }

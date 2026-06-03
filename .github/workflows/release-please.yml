@@ -1,0 +1,58 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+
+      - uses: jdx/mise-action@v2
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+
+      - name: Build format archive
+        if: ${{ steps.release.outputs['plugins/format--release_created'] == 'true' }}
+        run: mise exec -- bun scripts/package-plugin-releases.ts format
+
+      - name: Upload format archive
+        if: ${{ steps.release.outputs['plugins/format--release_created'] == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.release.outputs['plugins/format--tag_name'] }}" "dist/plugin-releases/format-${{ steps.release.outputs['plugins/format--version'] }}.zip" --clobber
+
+      - name: Build configdel archive
+        if: ${{ steps.release.outputs['plugins/configdel--release_created'] == 'true' }}
+        run: mise exec -- bun scripts/package-plugin-releases.ts configdel
+
+      - name: Upload configdel archive
+        if: ${{ steps.release.outputs['plugins/configdel--release_created'] == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.release.outputs['plugins/configdel--tag_name'] }}" "dist/plugin-releases/configdel-${{ steps.release.outputs['plugins/configdel--version'] }}.zip" --clobber
+
+      - name: Build jsonschema archive
+        if: ${{ steps.release.outputs['plugins/jsonschema--release_created'] == 'true' }}
+        run: mise exec -- bun scripts/package-plugin-releases.ts jsonschema
+
+      - name: Upload jsonschema archive
+        if: ${{ steps.release.outputs['plugins/jsonschema--release_created'] == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.release.outputs['plugins/jsonschema--tag_name'] }}" "dist/plugin-releases/jsonschema-${{ steps.release.outputs['plugins/jsonschema--version'] }}.zip" --clobber

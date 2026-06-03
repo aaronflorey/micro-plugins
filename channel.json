@@ -1,7 +1,3 @@
-// Channel index for micro plugin manager.
-// Add this URL to your `pluginchannels` setting in micro's settings.json:
-//   "pluginchannels": ["https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/channel.json"]
-
 [
   "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/format/repo.json",
   "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/configdel/repo.json",

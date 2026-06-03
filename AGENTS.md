@@ -6,7 +6,7 @@ A collection of [Micro editor](https://github.com/zyedidia/micro) plugins: `form
 
 - **No test framework** — plugins are Lua scripts for Micro editor; no test runner exists. Validate by loading in Micro and exercising the feature manually.
 - **No build step** — plugins are plain Lua; no compilation.
-- **Version bump automation**: `bun scripts/bump_plugin_versions.ts` — run automatically by lefthook on `pre-commit`. Bumps the patch version in both `VERSION` (Lua) and `repo.json` for each plugin with staged changes. Skips bump if only the version field itself changed (avoiding cascading bumps).
+- **Release automation**: `release-please` manages plugin version bumps and GitHub releases from Conventional Commits. Each plugin has its own `version.txt` and `CHANGELOG.md` under `plugins/<name>/`.
 - **Manual lint**: none configured. The Lua code is not linted.
 
 ## Plugin Architecture
@@ -17,13 +17,15 @@ Each plugin under `plugins/<name>/` follows this structure:
 plugins/<name>/
   <name>.lua       # Main plugin code
   repo.json        # Plugin metadata for Micro's plugin manager
+  version.txt      # Canonical version for release-please's simple strategy
+  CHANGELOG.md     # Per-plugin changelog maintained by release-please
   help/
     <name>.md      # Micro help file (registered via config.AddRuntimeFile)
 ```
 
 The top-level `repo.json` is kept for backward compatibility but only exposes the `format` plugin (Micro resolves `plugins[0]` only). The `channel.json` file is the proper install channel — it points to each plugin's per-plugin `repo.json`.
 
-**repo.json format**: Array of plugin objects. Each `Version` entry **must** include a `Url` field pointing to the raw `.lua` plugin file. Without it, Micro's plugin manager can't download the plugin.
+**repo.json format**: Array of plugin objects. Each `Version` entry **must** include a `Url` field pointing to a downloadable `.zip` archive for that plugin version. Micro's plugin manager downloads and unpacks that archive; a raw `.lua` URL is not installable.
 
 ### Micro Plugin API
 
@@ -101,11 +103,13 @@ The jsonschema plugin implements an embedded JSON parser for building a pointer-
 
 ## Versioning
 
-- VERSION constant at top of each `.lua` file: `VERSION = "0.2.0"`
+- VERSION constant at top of each `.lua` file: `VERSION = "0.2.1"`
 - `repo.json` version lives at `data[0].Versions[0].Version`
-- These must stay in sync — the `bump_plugin_versions.ts` script handles this
-- Bump level is always `patch` (automated); manual commits do `major`/`minor` by editing both files
-- The top-level `repo.json` is **not** version-bumped by the script
+- `plugins/<name>/version.txt` is the canonical version file for `release-please`
+- `release-please` keeps `version.txt`, the plugin `VERSION` constant, and the plugin `repo.json` in sync
+- The top-level `repo.json` is additionally updated by the `format` release because it is the backward-compatible single-plugin entrypoint
+- Build fresh release archives with `bun scripts/package-plugin-releases.ts` when you need a local artifact preview; the script writes to `dist/plugin-releases/`
+- The GitHub Actions `release-please` workflow uploads release zip assets in the same workflow run
 
 ## Buffer Reopen Pattern
 
@@ -136,9 +140,4 @@ See `testdata/jsonschema/` for example files used to manually test schema valida
 
 Defined in `mise.toml`:
 - `jsonschema` — latest
-- `lefthook` — latest
 - `bun` — latest
-
-## Lefthook
-
-Pre-commit hook runs `bun scripts/bump_plugin_versions.ts` with `stage_fixed: true` (bumps versions, stages the changes automatically).

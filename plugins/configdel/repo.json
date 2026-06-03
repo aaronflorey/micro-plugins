@@ -10,29 +10,8 @@
     ],
     "Versions": [
       {
-        "Version": "1.2.4",
-        "Url": "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/configdel/configdel.lua",
-        "Require": {
-          "micro": ">=2.0.0"
-        }
-      },
-      {
-        "Version": "1.2.3",
-        "Url": "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/configdel/configdel.lua",
-        "Require": {
-          "micro": ">=2.0.0"
-        }
-      },
-      {
-        "Version": "1.2.2",
-        "Url": "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/configdel/configdel.lua",
-        "Require": {
-          "micro": ">=2.0.0"
-        }
-      },
-      {
-        "Version": "0.2.1",
-        "Url": "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/configdel/configdel.lua",
+        "Version": "1.2.5",
+        "Url": "https://github.com/aaronflorey/micro-plugins/releases/download/configdel-v1.2.5/configdel-1.2.5.zip",
         "Require": {
           "micro": ">=2.0.0"
         }

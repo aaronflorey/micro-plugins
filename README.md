@@ -32,6 +32,8 @@ micro -plugin install configdel
 micro -plugin install jsonschema
 ```
 
+Micro installs plugins from downloadable zip archives referenced by each plugin's `repo.json`.
+
 ## Plugins
 
 ### format
@@ -94,14 +96,23 @@ Disable remote `$schema` resolution:
 
 ## Development
 
-This repo uses `lefthook` for pre-commit automation and `mise` for tooling.
+This repo uses `release-please` for versioning and GitHub releases, and `mise` for local tooling.
 
 ```sh
 mise install
-lefthook install
 ```
 
-On commit, if staged files include changes to a plugin directory and the commit message uses Conventional Commits, the hook bumps that plugin's patch version.
+Plugin releases are driven by Conventional Commits. `release-please` opens per-plugin release PRs and tags releases as `format-vX.Y.Z`, `configdel-vX.Y.Z`, or `jsonschema-vX.Y.Z`.
+
+If you want to build the release artifact locally, run:
+
+```sh
+bun scripts/package-plugin-releases.ts
+```
+
+The script writes release assets to `dist/plugin-releases/`.
+
+The `release-please` workflow builds and uploads the matching zip file to each GitHub release in the same workflow run using `GITHUB_TOKEN`.
 
 ## License
 

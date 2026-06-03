@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "include-component-in-tag": true,
+  "separate-pull-requests": true,
+  "packages": {
+    "plugins/format": {
+      "component": "format",
+      "package-name": "format",
+      "release-type": "simple",
+      "extra-files": [
+        "version.txt",
+        "format.lua",
+        "repo.json",
+        "/repo.json"
+      ]
+    },
+    "plugins/configdel": {
+      "component": "configdel",
+      "package-name": "configdel",
+      "release-type": "simple",
+      "extra-files": [
+        "version.txt",
+        "configdel.lua",
+        "repo.json"
+      ]
+    },
+    "plugins/jsonschema": {
+      "component": "jsonschema",
+      "package-name": "jsonschema",
+      "release-type": "simple",
+      "extra-files": [
+        "version.txt",
+        "jsonschema.lua",
+        "repo.json"
+      ]
+    }
+  }
+}
