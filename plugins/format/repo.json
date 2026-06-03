@@ -8,7 +8,8 @@
     ],
     "Versions": [
       {
-        "Version": "0.2.0",
+        "Version": "0.2.1",
+        "Url": "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/format/format.lua",
         "Require": {
           "micro": ">=2.0.0"
         }

@@ -1,5 +1,5 @@
-VERSION = "0.2.0"
-
+VERSION = "1.2.4"
+# 
 local micro = import("micro")
 local config = import("micro/config")
 local shell = import("micro/shell")

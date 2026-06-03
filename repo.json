@@ -10,6 +10,7 @@
   "Versions": [
     {
       "Version": "0.1.0",
+      "Url": "https://raw.githubusercontent.com/aaronflorey/micro-plugins/main/plugins/format/format.lua",
       "Require": {
         "micro": ">=2.0.0"
       }

@@ -1,5 +1,5 @@
-pre-commit:
+prepare-commit-msg:
   commands:
     bump-plugin-versions:
+      run: bun -i scripts/bump-plugin-versions.js {1}
       stage_fixed: true
-      run: bun scripts/bump_plugin_versions.ts
