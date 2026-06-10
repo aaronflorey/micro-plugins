@@ -1,4 +1,5 @@
 [
+  [
   {
     "Name": "jsonschema",
     "Description": "Validate saved JSON files against their root $schema using the jsonschema CLI",
@@ -18,4 +19,5 @@
       }
     ]
   }
+]
 ]
