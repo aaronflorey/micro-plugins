@@ -3,11 +3,13 @@
     "Name": "format",
     "Description": "Format the current buffer using an installed formatter for its file type",
     "Website": "local",
-    "Tags": ["formatting"],
+    "Tags": [
+      "formatting"
+    ],
     "Versions": [
       {
-        "Version": "0.2.1",
-        "Url": "https://github.com/aaronflorey/micro-plugins/releases/download/format-v0.2.1/format-0.2.1.zip",
+        "Version": "0.3.0",
+        "Url": "https://github.com/aaronflorey/micro-plugins/releases/download/format-v0.3.0/format-0.3.0.zip",
         "Require": {
           "micro": ">=2.0.0"
         }

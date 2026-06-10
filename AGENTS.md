@@ -103,13 +103,13 @@ The jsonschema plugin implements an embedded JSON parser for building a pointer-
 
 ## Versioning
 
-- VERSION constant at top of each `.lua` file: `VERSION = "0.2.1"`
+- VERSION constant at top of each `.lua` file: `VERSION = "x.y.z"`
 - `repo.json` version lives at `data[0].Versions[0].Version`
 - `plugins/<name>/version.txt` is the canonical version file for `release-please`
-- `release-please` keeps `version.txt`, the plugin `VERSION` constant, and the plugin `repo.json` in sync
-- The top-level `repo.json` is additionally updated by the `format` release because it is the backward-compatible single-plugin entrypoint
+- `bun scripts/sync-plugin-versions.ts` syncs each plugin `VERSION` constant and `repo.json` from `version.txt`
+- The top-level `repo.json` is additionally synced from the `format` plugin because it is the backward-compatible single-plugin entrypoint
 - Build fresh release archives with `bun scripts/package-plugin-releases.ts` when you need a local artifact preview; the script writes to `dist/plugin-releases/`
-- The GitHub Actions `release-please` workflow uploads release zip assets in the same workflow run
+- The GitHub Actions `release-please` workflow runs the sync script, commits the generated metadata if needed, then uploads release zip assets in the same workflow run
 
 ## Buffer Reopen Pattern
 

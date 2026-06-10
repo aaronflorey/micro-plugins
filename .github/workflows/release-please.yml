@@ -27,6 +27,21 @@ jobs:
       - uses: jdx/mise-action@v2
         if: ${{ steps.release.outputs.releases_created == 'true' }}
 
+      - name: Sync plugin version files
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        run: mise exec -- bun scripts/sync-plugin-versions.ts
+
+      - name: Commit synced version files
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        run: |
+          if git diff --quiet --exit-code; then
+            exit 0
+          fi
+
+          git add repo.json plugins/*/*.lua plugins/*/repo.json
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'chore(plugins): sync release metadata'
+          git push
+
       - name: Build format archive
         if: ${{ steps.release.outputs['plugins/format--release_created'] == 'true' }}
         run: mise exec -- bun scripts/package-plugin-releases.ts format

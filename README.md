@@ -104,6 +104,8 @@ mise install
 
 Plugin releases are driven by Conventional Commits. `release-please` opens per-plugin release PRs and tags releases as `format-vX.Y.Z`, `configdel-vX.Y.Z`, or `jsonschema-vX.Y.Z`.
 
+`plugins/<name>/version.txt` is the canonical release version. The workflow runs `bun scripts/sync-plugin-versions.ts` to update each plugin's `VERSION` constant and `repo.json` before packaging and uploading release assets.
+
 If you want to build the release artifact locally, run:
 
 ```sh

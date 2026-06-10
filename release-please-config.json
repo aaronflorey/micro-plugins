@@ -7,48 +7,19 @@
       "component": "format",
       "package-name": "format",
       "release-type": "simple",
-      "extra-files": [
-        "version.txt",
-        "format.lua",
-        {
-          "type": "json",
-          "path": "repo.json",
-          "jsonpath": "$[0].Versions[0].Version"
-        },
-        {
-          "type": "json",
-          "path": "/repo.json",
-          "jsonpath": "$[0].Versions[0].Version"
-        }
-      ]
+      "extra-files": ["version.txt"]
     },
     "plugins/configdel": {
       "component": "configdel",
       "package-name": "configdel",
       "release-type": "simple",
-      "extra-files": [
-        "version.txt",
-        "configdel.lua",
-        {
-          "type": "json",
-          "path": "repo.json",
-          "jsonpath": "$[0].Versions[0].Version"
-        }
-      ]
+      "extra-files": ["version.txt"]
     },
     "plugins/jsonschema": {
       "component": "jsonschema",
       "package-name": "jsonschema",
       "release-type": "simple",
-      "extra-files": [
-        "version.txt",
-        "jsonschema.lua",
-        {
-          "type": "json",
-          "path": "repo.json",
-          "jsonpath": "$[0].Versions[0].Version"
-        }
-      ]
+      "extra-files": ["version.txt"]
     }
   }
 }

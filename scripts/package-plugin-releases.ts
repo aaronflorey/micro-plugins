@@ -5,13 +5,6 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { $ } from "bun";
 
-type PluginRepo = Array<{
-  Name: string;
-  Versions?: Array<{
-    Version: string;
-  }>;
-}>;
-
 const allPlugins = ["format", "configdel", "jsonschema"];
 const requestedPlugins = process.argv.slice(2);
 const plugins = requestedPlugins.length > 0 ? requestedPlugins : allPlugins;
@@ -22,12 +15,10 @@ for (const plugin of plugins) {
   }
 
   const pluginDir = join("plugins", plugin);
-  const repoPath = join(pluginDir, "repo.json");
-  const repo = JSON.parse(readFileSync(repoPath, "utf8")) as PluginRepo;
-  const version = repo[0]?.Versions?.[0]?.Version;
+  const version = readFileSync(join(pluginDir, "version.txt"), "utf8").trim();
 
   if (typeof version !== "string" || version.length === 0) {
-    throw new Error(`Missing latest version in ${repoPath}`);
+    throw new Error(`Missing version in ${pluginDir}/version.txt`);
   }
 
   const outputDir = resolve("dist", "plugin-releases");
