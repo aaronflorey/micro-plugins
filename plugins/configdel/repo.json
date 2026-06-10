@@ -1,4 +1,5 @@
 [
+  [
   {
     "Name": "configdel",
     "Description": "Delete the YAML or JSON key at the current cursor position",
@@ -18,4 +19,5 @@
       }
     ]
   }
+]
 ]
