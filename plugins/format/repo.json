@@ -1,4 +1,5 @@
 [
+  [
   {
     "Name": "format",
     "Description": "Format the current buffer using an installed formatter for its file type",
@@ -16,4 +17,5 @@
       }
     ]
   }
+]
 ]
