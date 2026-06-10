@@ -8,8 +8,8 @@
     ],
     "Versions": [
       {
-        "Version": "0.3.0",
-        "Url": "https://github.com/aaronflorey/micro-plugins/releases/download/format-v0.3.0/format-0.3.0.zip",
+        "Version": "0.3.1",
+        "Url": "https://github.com/aaronflorey/micro-plugins/releases/download/format-v0.3.1/format-0.3.1.zip",
         "Require": {
           "micro": ">=2.0.0"
         }
