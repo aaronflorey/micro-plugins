@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/aaronflorey/micro-plugins/compare/jsonschema-v0.3.0...jsonschema-v0.3.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* **release:** sync plugin metadata from version files ([6431214](https://github.com/aaronflorey/micro-plugins/commit/64312144c37ab6e46baa06e851213135f6a6109c))
+* **repo:** repair plugin metadata manifests ([5b25074](https://github.com/aaronflorey/micro-plugins/commit/5b2507445906948668733e4aeed5fb6613e4a996))
+
 ## [0.3.0](https://github.com/aaronflorey/micro-plugins/compare/jsonschema-v0.2.1...jsonschema-v0.3.0) (2026-06-10)
 
 
