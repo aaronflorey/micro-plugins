@@ -1,14 +1,9 @@
 [
-  [
   {
     "Name": "jsonschema",
     "Description": "Validate saved JSON files against their root $schema using the jsonschema CLI",
     "Website": "local",
-    "Tags": [
-      "json",
-      "schema",
-      "validation"
-    ],
+    "Tags": ["json", "schema", "validation"],
     "Versions": [
       {
         "Version": "0.2.1",
@@ -19,5 +14,4 @@
       }
     ]
   }
-]
 ]

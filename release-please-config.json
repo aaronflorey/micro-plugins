@@ -10,8 +10,16 @@
       "extra-files": [
         "version.txt",
         "format.lua",
-        "repo.json",
-        "/repo.json"
+        {
+          "type": "json",
+          "path": "repo.json",
+          "jsonpath": "$[0].Versions[0].Version"
+        },
+        {
+          "type": "json",
+          "path": "/repo.json",
+          "jsonpath": "$[0].Versions[0].Version"
+        }
       ]
     },
     "plugins/configdel": {
@@ -21,7 +29,11 @@
       "extra-files": [
         "version.txt",
         "configdel.lua",
-        "repo.json"
+        {
+          "type": "json",
+          "path": "repo.json",
+          "jsonpath": "$[0].Versions[0].Version"
+        }
       ]
     },
     "plugins/jsonschema": {
@@ -31,7 +43,11 @@
       "extra-files": [
         "version.txt",
         "jsonschema.lua",
-        "repo.json"
+        {
+          "type": "json",
+          "path": "repo.json",
+          "jsonpath": "$[0].Versions[0].Version"
+        }
       ]
     }
   }
