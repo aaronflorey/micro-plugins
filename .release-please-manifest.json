@@ -1,5 +1,5 @@
 {
   "plugins/format": "0.3.1",
   "plugins/configdel": "1.2.5",
-  "plugins/jsonschema": "0.3.0"
+  "plugins/jsonschema": "0.3.1"
 }
