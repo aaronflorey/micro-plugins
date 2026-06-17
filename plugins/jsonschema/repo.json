@@ -10,8 +10,8 @@
     ],
     "Versions": [
       {
-        "Version": "0.3.0",
-        "Url": "https://github.com/aaronflorey/micro-plugins/releases/download/jsonschema-v0.3.0/jsonschema-0.3.0.zip",
+        "Version": "0.3.1",
+        "Url": "https://github.com/aaronflorey/micro-plugins/releases/download/jsonschema-v0.3.1/jsonschema-0.3.1.zip",
         "Require": {
           "micro": ">=2.0.0"
         }
